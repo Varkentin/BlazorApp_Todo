@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using BlazorApp_Todo.Data;
+using Microsoft.EntityFrameworkCore;
+using BlazorApp_Todo.Data.Repository;
 
 namespace BlazorApp_Todo
 {
@@ -26,8 +28,15 @@ namespace BlazorApp_Todo
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContextPool<DB>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("AppDb"));
+            });
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
+            services.AddScoped<IRepository, SqlRepository>();
+
             services.AddSingleton<WeatherForecastService>();
         }
 

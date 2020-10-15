@@ -1,9 +1,11 @@
-﻿@page "/todo"
+﻿@inject BlazorApp_Todo.Data.Repository.IRepository repository;
+
+@page "/todo"
 
 <div class="container-fluid">
     <div class="row">
         <div class="col">
-            <h2 class="text-center">Todo (@todos.Count(item=>!item.IsDone))</h2>
+            <h2 class="text-center">Todo (@todos.Count(item => !item.IsDone))</h2>
             <table class="table table-striped">
                 <thead class="table-dark">
                     <tr>
@@ -23,20 +25,27 @@
                             </td>
 
                             <td>
-                                <input type="checkbox" @bind="item.IsDone" />
+                                @if (!item.IsDone)
+                                {
+                                    <input type="checkbox" value="item.IsDone" @onchange="(()=> StatusChanger(item))" />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" checked value="item.IsDone" @onchange="(()=> StatusChanger(item))" />
+                                }
                             </td>
                             <td>
-                                <button class="btn btn-danger" @onclick="(()=>DeleteTodo(item))">Delete</button>
+                                <button class="btn btn-danger" @onclick="(()=>DeleteTodo(item.Id))">Delete</button>
                             </td>
                         </tr>
-                
+
                     </tbody>
 
                 }
             </table>
             <div class="row">
                 <div class="col">
-                    <input class="form-control" placeholder="Type something todo" @bind="newTodo"/>
+                    <input class="form-control" placeholder="Type something todo" @bind="newTodo" />
                 </div>
                 <div class="col">
                     <button class="btn btn-success" @onclick="AddTodo">Add todo</button>
@@ -47,21 +56,35 @@
 </div>
 
 @code {
-    private IList<TodoItem> todos = new List<TodoItem>();
+    private IEnumerable<TodoItem> todos = new List<TodoItem>();
+
+    protected override void OnInitialized()
+    {
+        todos = repository.GetAllItems();
+    }
+
     private string newTodo;
 
     private void AddTodo()
     {
         if (!string.IsNullOrWhiteSpace(newTodo))
         {
-            todos.Add(new TodoItem { Title = newTodo });
+            //todos.Add(new TodoItem { Title = newTodo });
+            repository.AddTodo(newTodo);
+
             newTodo = string.Empty;
         }
 
     }
-    private void DeleteTodo(TodoItem deletedItem)
+    private void DeleteTodo(int id)
     {
-        todos.Remove(deletedItem);
+        //todos.Remove(deletedItem);
+        repository.DeleteItem(id);
+    }
+    private void StatusChanger(TodoItem chengedItem)
+    {
+        chengedItem.IsDone = !chengedItem.IsDone;
+        repository.ValueChanged(chengedItem);
     }
 
 }
